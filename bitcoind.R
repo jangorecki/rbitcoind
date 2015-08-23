@@ -15,19 +15,26 @@ bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),
 }
 
 # wrappers
-getinfo <- function() bitcoind.rpc(method = "getinfo")$result
-getblockcount <- function() bitcoind.rpc(method = "getblockcount")$result
-getnewaddress <- function() bitcoind.rpc(method = "getnewaddress")$result
+getaccount <- function(bitcoinaddress) bitcoind.rpc(method = "getaccount", params = list(bitcoinaddress))$result
 getaccountaddress <- function(account) bitcoind.rpc(method = "getaccountaddress", params = list(account))$result
-getreceivedbyaddress <- function(bitcoinaddress, minconf = 1L) bitcoind.rpc(method = "getreceivedbyaddress", params = list(bitcoinaddress, minconf))$result
-getreceivedbyaccount <- function(account, minconf = 1L) bitcoind.rpc(method = "getreceivedbyaccount", params = list(account, minconf))$result
 getaddressesbyaccount <- function(account) bitcoind.rpc(method = "getaddressesbyaccount", params = list(account))$result
 getbalance <- function(account) bitcoind.rpc(method = "getbalance", params = list(account))$result
-bitcoind.stop <- function() bitcoind.rpc(method = "stop")$result
-validateaddress <- function(bitcoinaddress) bitcoind.rpc(method = "validateaddress", params = list(bitcoinaddress))$result
+getblock <- function(hash, verbose = TRUE) bitcoind.rpc(method = "getblock", params = list(hash, verbose))$result
+getblockchaininfo <- function() bitcoind.rpc(method = "getblockchaininfo")$result
+getblockcount <- function() bitcoind.rpc(method = "getblockcount")$result
+getchaintips <- function() bitcoind.rpc(method = "getchaintips")$result
+getinfo <- function() bitcoind.rpc(method = "getinfo")$result
+getnewaddress <- function() bitcoind.rpc(method = "getnewaddress")$result
+getreceivedbyaccount <- function(account, minconf = 1L) bitcoind.rpc(method = "getreceivedbyaccount", params = list(account, minconf))$result
+getreceivedbyaddress <- function(bitcoinaddress, minconf = 1L) bitcoind.rpc(method = "getreceivedbyaddress", params = list(bitcoinaddress, minconf))$result
+gettransaction <- function(txid, includeWatchonly = FALSE) bitcoind.rpc(method = "gettransaction", params = list(txid, includeWatchonly))$result
 listaccounts <- function(minconf = 1L) bitcoind.rpc(method = "listaccounts", params = list(minconf))$result
 listreceivedbyaccount <- function(minconf = 1L, includeempty = FALSE) bitcoind.rpc(method = "listreceivedbyaccount", params = list(minconf, includeempty))$result
-listtransactions <- function(account, count = 10L) bitcoind.rpc(method = "listtransactions", params = list(account, count))$result
+listsinceblock <- function(blockhash, target.confirmations = 1L, includeWatchonly = FALSE) bitcoind.rpc(method = "listsinceblock", params = list(blockhash, target.confirmations, includeWatchonly))$result
+listtransactions <- function(account, count = 10L, from = 0L) bitcoind.rpc(method = "listtransactions", params = list(account, count, from))$result
+listunspent <- function(miconf = 1L, maxconf = 9999999L, addresses) bitcoind.rpc(method = "listunspent", params = list(miconf, maxconf, addresses))$result
+stop.bitcoind <- function() bitcoind.rpc(method = "stop")$result
+validateaddress <- function(bitcoinaddress) bitcoind.rpc(method = "validateaddress", params = list(bitcoinaddress))$result
 
 # helpers
 makepaymenturi <- function(address, amount) paste0("bitcoin:",address,"?amount=",amount)
