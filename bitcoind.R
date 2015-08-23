@@ -16,9 +16,13 @@ bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),
 
 # wrappers
 getinfo <- function() bitcoind.rpc(method = "getinfo")$result
+getblockcount <- function() bitcoind.rpc(method = "getblockcount")$result
 getnewaddress <- function() bitcoind.rpc(method = "getnewaddress")$result
+getaccountaddress <- function(account) bitcoind.rpc(method = "getaccountaddress", params = list(account))$result
 getreceivedbyaddress <- function(bitcoinaddress, minconf = 1L) bitcoind.rpc(method = "getreceivedbyaddress", params = list(bitcoinaddress, minconf))$result
 getreceivedbyaccount <- function(account, minconf = 1L) bitcoind.rpc(method = "getreceivedbyaccount", params = list(account, minconf))$result
+getaddressesbyaccount <- function(account) bitcoind.rpc(method = "getaddressesbyaccount", params = list(account))$result
+getbalance <- function(account) bitcoind.rpc(method = "getbalance", params = list(account))$result
 bitcoind.stop <- function() bitcoind.rpc(method = "stop")$result
 validateaddress <- function(bitcoinaddress) bitcoind.rpc(method = "validateaddress", params = list(bitcoinaddress))$result
 listaccounts <- function(minconf = 1L) bitcoind.rpc(method = "listaccounts", params = list(minconf))$result
