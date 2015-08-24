@@ -1,7 +1,7 @@
 library(rbitcoind)
 library(data.table)
 library(RSQLite)
-options(rpchost = "192.168.56.103",
+options(rpchost = "127.0.0.1",
         rpcuser = "bitcoinduser",
         rpcpassword = "userpassbitcoind",
         rpcport = "18332") # regtest
