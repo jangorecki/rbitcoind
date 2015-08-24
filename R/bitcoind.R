@@ -13,6 +13,14 @@
 #' }
 NULL
 
+#' @title run.bitcoind
+#' @details Simply calls \code{system("bitcoind -daemon")}. Works only when bitcoin daemon available on localhost.
+run.bitcoind <- function(){
+    rpchost = getOption("rpchost")
+    if(!is.null(rpchost) && !rpchost %in% c("127.0.0.1","localhost")) stop(paste0("start.bitcoind function can only start locally hosted bitcoin node, adjust your 'rpchost' option, current value: ", toString(rpchost)))
+    return(system("bitcoind -daemon"))
+}
+
 #' @name bitcoind.rpc
 #' @title Bitcoin daemon curl call wrapper.
 #' @param host character.

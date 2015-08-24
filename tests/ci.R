@@ -1,15 +1,37 @@
+## rbitcoind CI tests
+# confgurate new private blockchain using `regtest` mode
+# mine some BTC
+# dump some statitics blockchain, wallet, accounts
+# iterate few times
+# validate results
+
+## tests should be execute on fresh CI process, with bitcoind installed but not started/configured.
+
 library(rbitcoind)
 library(data.table)
 library(RSQLite)
+
 options(rpchost = "127.0.0.1",
         rpcuser = "bitcoinduser",
         rpcpassword = "userpassbitcoind",
-        rpcport = "18332") # regtest
+        rpcport = "18332")
+
+# deploy bitcoin.conf file based on rbitcoind/tests/bitcoin.conf
+
+bitcoin_dir = path.expand("~/.bitcoin")
+bitcoin_conf_pkg = system.file("tests","bitcoin.conf", package = "rbitcoind")
+if(!dir.exists(bitcoin_dir)) dir.create(bitcoin_dir) else stop(paste(bitcoin_dir, "should not exists in fresh CI builds."))
+bitcoin_conf = paste(bitcoin_dir, "bitcoin.conf", sep="/")
+if(!file.exists(bitcoin_conf)) file.copy(bitcoin_conf_pkg, bitcoin_conf) else stop(paste(bitcoin_conf, "should not exists in fresh CI builds."))
+
+# run daemon
+run.bitcoind()
+Sys.sleep(10L)
 
 # valid testing environment
 
-if(!length(getinfo())) stop("testing connection to bitcoin daemon fails")
-if((blockcount <- getblockcount()) > 1212L) invisible() #stop(paste0("connected to non clean blockchain, already has ", blockcount, " blocks."))
+if(!length(getinfo())) stop("Testing connection to bitcoin daemon fails.")
+if((blockcount <- getblockcount()) > 1212L) stop(paste0("Connected to non fresh blockchain, already has ", blockcount, " blocks. For CI use fresh environment."))
 
 # iterations of blockchain growning
 
@@ -19,6 +41,8 @@ dbWrite = function(name, value) dbWriteTable(conn, name, value = stripCols(value
 dbRead = function(name) use.data.table(dbReadTable(conn, name))
 selfName = function(x) setNames(x, x)
 
+ci_time = as.integer(Sys.time())
+meta_cols = function(i, ts=Sys.time()) list(ci=ci_time, iteration=i, timestamp=ts)
 db_file = "rbitcoind.db"
 conn = dbConnect(SQLite(), db_file)
 for(i in 1:4){
@@ -31,14 +55,14 @@ for(i in 1:4){
     # transfer BTC
     # TO DO
     # collect info
-    blockchaininfo = setDT(getblockchaininfo())[, c(list(iteration = i, timestamp=Sys.time()), .SD)]
-    walletinfo = setDT(getwalletinfo())[, c(list(iteration = i, timestamp=Sys.time()), .SD)]
+    blockchaininfo = getblockchaininfo()[, c(meta_cols(i), .SD)]
+    walletinfo = getwalletinfo()[, c(meta_cols(i), .SD)]
     accounts = names(listaccounts())
     # write to db
     dbWrite("blockchaininfo", blockchaininfo)
     dbWrite("walletinfo", walletinfo)
-    lapply(accounts, function(account) dbWrite("transactions", value = listtransactions(account)[, c(list(iteration = i), .SD)]))
-    lapply(accounts, function(account) dbWrite("addressesbyaccount", value = data.table(addresses = getaddressesbyaccount(account))[, c(list(iteration = i, account = account), .SD)]))
+    lapply(accounts, function(account) dbWrite("transactions", value = listtransactions(account)[, c(meta_cols(i), .SD)]))
+    lapply(accounts, function(account) dbWrite("addressesbyaccount", value = data.table(addresses = getaddressesbyaccount(account))[, c(meta_cols(i), list(account = account), .SD)]))
 }
 invisible(dbDisconnect(conn))
 
