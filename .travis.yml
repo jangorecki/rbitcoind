@@ -1,6 +1,12 @@
 language: r
 sudo: required
 
+before_script:
+  - sudo apt-add-repository ppa:bitcoin/bitcoin -y
+  - sudo apt-get update -q
+  - sudo apt-get install bitcoin -y
+  - bitcoind -server -daemon -rpcuser=bitcoinduser -rpcpasswprd=userpassbitcoind -regtest
+
 r_packages:
  - jsonlite
  - httr

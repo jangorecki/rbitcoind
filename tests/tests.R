@@ -19,7 +19,7 @@ dbWrite = function(name, value) dbWriteTable(conn, name, value = stripCols(value
 dbRead = function(name) use.data.table(dbReadTable(conn, name))
 selfName = function(x) setNames(x, x)
 
-file.remove(db_file)
+db_file = "rbitcoind.db"
 conn = dbConnect(SQLite(), db_file)
 for(i in 1:4){
     # wait before each iteration
