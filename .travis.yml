@@ -1,6 +1,9 @@
 language: r
 sudo: required
 
+apt_packages:
+ - libqrencode-dev
+
 before_script:
   - sudo apt-add-repository ppa:bitcoin/bitcoin -y
   - sudo apt-get update -q
