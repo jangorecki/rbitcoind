@@ -22,4 +22,4 @@ r_packages:
 
 r_github_packages:
  - Rdatatable/data.table
- - hrbrmstr/qrencoder
+ - hrbrmstr/qrencoder@2ee1e8799d3257a711b8bfe8b6f43552956d76cb
