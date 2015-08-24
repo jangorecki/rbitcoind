@@ -1,0 +1,12 @@
+language: r
+sudo: required
+
+r_packages:
+ - jsonlite
+ - httr
+ - raster
+ - RSQLite
+
+r_github_packages:
+ - Rdatatable/data.table
+ - hrbrmstr/qrencoder
