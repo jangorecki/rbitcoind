@@ -2,7 +2,7 @@ Package: rbitcoind
 Type: Package
 Title: R interface to bitcoind
 Version: 0.1
-Date: 2015-08-23
+Date: 2015-08-24
 Author: Jan Gorecki
 Maintainer: Jan Gorecki <J.Gorecki@wit.edu.pl>
 Description: Wrappers around bitcoind json-rpc.
