@@ -1,6 +1,6 @@
 Package: rbitcoind
 Type: Package
-Title: R interface to bitcoind
+Title: R interface to bitcoin daemon
 Version: 0.1
 Date: 2015-08-24
 Author: Jan Gorecki

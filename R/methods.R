@@ -56,8 +56,9 @@ getnetworkinfo <- function() bitcoind.rpc(method = "getnetworkinfo")$result
 #' @seealso \url{https://bitcoin.org/en/developer-reference#getpeerinfo}
 getpeerinfo <- function() bitcoind.rpc(method = "getpeerinfo")$result
 #' @title getnewaddress
+#' @param account character.
 #' @seealso \url{https://bitcoin.org/en/developer-reference#getnewaddress}
-getnewaddress <- function() bitcoind.rpc(method = "getnewaddress")$result
+getnewaddress <- function(account = "") bitcoind.rpc(method = "getnewaddress", params = list(account))$result
 #' @title getreceivedbyaccount
 #' @param account character.
 #' @param minconf integer.

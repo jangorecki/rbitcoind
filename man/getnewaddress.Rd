@@ -3,7 +3,10 @@
 \alias{getnewaddress}
 \title{getnewaddress}
 \usage{
-getnewaddress()
+getnewaddress(account = "")
+}
+\arguments{
+\item{account}{character.}
 }
 \description{
 getnewaddress
