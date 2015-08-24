@@ -8,4 +8,4 @@ Maintainer: Jan Gorecki <J.Gorecki@wit.edu.pl>
 Description: Wrappers around bitcoind json-rpc.
 License: GPL-3
 Imports: jsonlite, httr
-Suggests: data.table, qrencoder, raster, RSQLite
+Suggests: data.table, qrencoder, raster, RSQLite, shiny, DT
