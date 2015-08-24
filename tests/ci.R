@@ -55,8 +55,8 @@ for(i in 1:4){
     # transfer BTC
     # TO DO
     # collect info
-    blockchaininfo = getblockchaininfo()[, c(meta_cols(i), .SD)]
-    walletinfo = getwalletinfo()[, c(meta_cols(i), .SD)]
+    blockchaininfo = setDT(getblockchaininfo())[, c(meta_cols(i), .SD)]
+    walletinfo = setDT(getwalletinfo())[, c(meta_cols(i), .SD)]
     accounts = names(listaccounts())
     # write to db
     dbWrite("blockchaininfo", blockchaininfo)
