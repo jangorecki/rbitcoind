@@ -5,7 +5,7 @@
 #' @description You need to setup/connect to bitcoin node. Unit tests are run on \code{regtest} network which uses private blockchain and doesn't need to be synchronized.
 #' @seealso \link{bitcoind.rpc}
 #' @examples \dontrun{
-#' options(rpchost = "192.168.56.103",
+#' options(rpchost = "127.0.0.1",
 #'         rpcuser = "bitcoinduser",
 #'         rpcpassword = "userpassbitcoind",
 #'         rpcport = "18332") # regtest
@@ -24,7 +24,7 @@ NULL
 #' @param params list.
 #' @return jsonlite decoded response from json-rpc bitcoind. If \code{option("use.data.table"=TRUE)} then it will recursively turn data.frames to data.tables.
 #' @examples \dontrun{
-#' bitcoind.rpc(host = "192.168.56.103",
+#' bitcoind.rpc(host = "127.0.0.1",
 #'              user = "bitcoinduser", 
 #'              password = "userpassbitcoind", 
 #'              port = "18332", # regtest
@@ -39,6 +39,8 @@ bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),
     rpcurl <- paste0("http://",user,":",password,"@",host,":",port)
     req <- httr::POST(rpcurl, body = jsonlite::toJSON(list(jsonrpc = "1.0", id = id, method = method, params = params), auto_unbox=TRUE))
     if(httr::http_status(req)$category != "success"){
+        browser()
+        message(httr::content(req, "text"))
         message(jsonlite::fromJSON(httr::content(req, "text"))$error$message)
         httr::stop_for_status(req)
     }
@@ -76,11 +78,10 @@ plotQR <- function(to_encode){
 use.data.table <- function(x, use = getOption("use.data.table")){
     if(isTRUE(use)){
         if(!requireNamespace("data.table", quietly = TRUE)) stop("Cannot use 'use.data.table' without having data.table package installed.")
-        else {
-            if(data.table::is.data.table(x)) x
-            else if(is.data.frame(x)) data.table::setDT(x)
-            else if(is.list(x)) lapply(x, use.data.table, use = use)
-            else x
-        }
-    } else x
+        if(data.table::is.data.table(x)) x
+        else if(is.data.frame(x)) data.table::setDT(x)
+        else if(is.list(x)) lapply(x, use.data.table, use = use)
+        else x
+    }
+    else x
 }

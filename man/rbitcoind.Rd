@@ -9,7 +9,7 @@ You need to setup/connect to bitcoin node. Unit tests are run on \code{regtest} 
 }
 \examples{
 \dontrun{
-options(rpchost = "192.168.56.103",
+options(rpchost = "127.0.0.1",
         rpcuser = "bitcoinduser",
         rpcpassword = "userpassbitcoind",
         rpcport = "18332") # regtest

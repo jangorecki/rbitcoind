@@ -8,7 +8,11 @@ before_script:
   - sudo apt-add-repository ppa:bitcoin/bitcoin -y
   - sudo apt-get update -qq
   - sudo apt-get install bitcoind -y
-  - bitcoind -server -daemon -rpcuser=bitcoinduser -rpcpasswprd=userpassbitcoind -regtest
+  - echo 'server=1' > .bitcoin/bitcoin.conf
+  - echo 'regtest=1' >> .bitcoin/bitcoin.conf
+  - echo 'rpcuser=bitcoinduser' >> .bitcoin/bitcoin.conf
+  - echo 'rpcpassword=userpassbitcoind' >> .bitcoin/bitcoin.conf
+  - bitcoind -daemon
 
 r_packages:
  - jsonlite
