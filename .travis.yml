@@ -14,6 +14,8 @@ r_packages:
  - httr
  - raster
  - RSQLite
+ - shiny
+ - DT
 
 r_github_packages:
  - Rdatatable/data.table

@@ -64,8 +64,8 @@ for(i in 1:4){ # i = 1L
     # wait before each iteration
     if(i > 1L) Sys.sleep(time = 1L)
     # generate blocks
-    if(i == 1L) invisible(generate(100L))
-    invisible(generate(i * 2L))
+    #if(i == 1L) invisible(generate(100L))
+    #invisible(generate(i * 2L))
     # create accounts
     new_accounts = sapply(1:(i*2L), function(i) getRandString(6L))
     invisible(sapply(new_accounts, getnewaddress))
