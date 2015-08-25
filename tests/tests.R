@@ -50,36 +50,45 @@ stripCols = function(x) x[, .SD, .SDcols=sapply(x, is.atomic)]
 dbWrite = function(name, value) dbWriteTable(conn, name, value = stripCols(value), append = TRUE)
 dbRead = function(name) use.data.table(dbReadTable(conn, name))
 selfName = function(x) setNames(x, x)
+getRandString = function(len=12L) return(paste(sample(c(rep(0:9,each=5),LETTERS,letters),len,replace=TRUE),collapse='')) # https://ryouready.wordpress.com/2008/12/18/generate-random-string-name/#comment-38
 
 # populate blockchain and wallet data in iterations
 
+set.seed(123)
 ci_time = as.integer(Sys.time())
 meta_cols = function(i, ts=Sys.time()) list(ci=ci_time, iteration=i, timestamp=ts)
 db_file = "rbitcoind.db"
+suppressWarnings(file.remove(db_file))
 conn = dbConnect(SQLite(), db_file)
 for(i in 1:4){ # i = 1L
     # wait before each iteration
     if(i > 1L) Sys.sleep(time = 1L)
     # generate blocks
-    #if(blockcount < 300L) blocks = generate(101L)
-    # create acounts
-    #new_num = i * 2L
-    #getnewaddress(acc)
+    if(i == 1L) invisible(generate(100L))
+    invisible(generate(i * 2L))
+    # create accounts
+    new_accounts = sapply(1:(i*2L), function(i) getRandString(6L))
+    invisible(sapply(new_accounts, getnewaddress))
     # addresses
     accounts = names(listaccounts())
-    addresses = lapply(accounts, as.null)
+    # addresses = lapply(accounts, as.null)
     # TO DO
     # make transactions
     # TO DO
     # collect info
     blockchaininfo = setDT(getblockchaininfo())[, c(meta_cols(i), .SD)]
     walletinfo = setDT(getwalletinfo())[, c(meta_cols(i), .SD)]
-    
     # write to db
     dbWrite("blockchaininfo", blockchaininfo)
     dbWrite("walletinfo", walletinfo)
-    lapply(accounts, function(account) dbWrite("transactions", value = setDT(listtransactions(account))[, c(meta_cols(i), .SD)]))
-    lapply(accounts, function(account) dbWrite("addressesbyaccount", value = data.table(addresses = getaddressesbyaccount(account))[, c(meta_cols(i), list(account = account), .SD)]))
+    lapply(accounts, function(account){
+        transactions = listtransactions(account)
+        if(length(transactions)) dbWrite("transactions", value = setDT(transactions)[, c(meta_cols(i), .SD)])
+    })
+    lapply(accounts, function(account){
+        addresses = getaddressesbyaccount(account)
+        if(length(addresses)) dbWrite("addressesbyaccount", value = data.table(account = account, addresses = addresses)[, c(meta_cols(i), .SD)])
+    })
 }
 invisible(dbDisconnect(conn))
 stop.bitcoind()
@@ -106,21 +115,21 @@ sapply(names(accounts_data), function(accounts_tbl) write.csv(accounts_data[[acc
 
 tbls = c(blockchain_tbls, wallet_tbls, accounts_tbls)
 conn = dbConnect(SQLite(), db_file)
-data = lapply(selfName(tbls), dbRead)
+ldata = lapply(selfName(tbls), dbRead)
 invisible(dbDisconnect(conn))
 
-process = list(
+lprocess = list(
     blockchaininfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(from=min(timestamp), to=max(timestamp)), .(chain, blocks, headers)],
     walletinfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(timestamp, balance, unconfirmed_balance, txcount)],
     transactions = function(x) x[, ts := as.POSIXct(time, origin="1970-01-01")][, .(.N, total_amount = sum(amount)), .(account, address, year(ts), month(ts), mday(ts))],
     addressesbyaccount = function(x) x[, .(from=as.POSIXct(min(timestamp), origin="1970-01-01"), to=as.POSIXct(max(timestamp), origin="1970-01-01")), .(account, addresses)]
 )
 
-stats = function(tbls){
-    stopifnot(names(process)==names(data))
+stats = function(tbls, ldata, lprocess){
+    stopifnot(names(lprocess)==names(ldata))
     mapply(function(process, data) process(data), 
-           process[names(process) %in% tbls], 
-           data[names(data) %in% tbls], 
+           lprocess[names(lprocess) %in% tbls], 
+           ldata[names(ldata) %in% tbls], 
            SIMPLIFY = FALSE)
 }
-print(stats(tbls))
+print(stats(tbls, ldata, lprocess))
