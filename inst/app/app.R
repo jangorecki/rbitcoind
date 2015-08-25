@@ -5,11 +5,6 @@ library(RSQLite)
 
 # config
 
-options(rpchost = "127.0.0.1",
-        rpcuser = "bitcoinduser",
-        rpcpassword = "userpassbitcoind",
-        rpcport = "18332")
-
 db_file = "rbitcoind.db"
 wd = getwd()
 db_filepath = path.expand(paste(wd, db_file,sep="/"))

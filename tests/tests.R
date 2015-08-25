@@ -39,7 +39,8 @@ Sys.sleep(10L)
 
 # valid testing environment
 
-if(!length(getinfo())) stop("Testing connection to bitcoin daemon fails.")
+if(!length(info <- getinfo())) stop("Testing connection to bitcoin daemon fails.")
+print(setDT(info))
 if((blockcount <- getblockcount()) > 1212L) stop(paste0("Connected to non fresh blockchain, already has ", blockcount, " blocks. For CI use fresh environment."))
 
 # helpers
@@ -100,3 +101,26 @@ suppressWarnings(file.remove(paste0("rbitcoind_blockchain_data_",blockchain_tbls
 sapply(names(blockchain_data), function(blockchain_tbl) write.csv(blockchain_data[[blockchain_tbl]], file = paste0("rbitcoind_blockchain_data_",blockchain_tbl,".csv"), row.names = FALSE))
 sapply(names(wallet_data), function(wallet_tbl) write.csv(wallet_data[[wallet_tbl]], file = paste0("rbitcoind_wallet_data_",wallet_tbl,".csv"), row.names = FALSE))
 sapply(names(accounts_data), function(accounts_tbl) write.csv(accounts_data[[accounts_tbl]], file = paste0("rbitcoind_accounts_data_",accounts_tbl,".csv"), row.names = FALSE))
+
+# stats
+
+tbls = c(blockchain_tbls, wallet_tbls, accounts_tbls)
+conn = dbConnect(SQLite(), db_file)
+data = lapply(selfName(tbls), dbRead)
+invisible(dbDisconnect(conn))
+
+process = list(
+    blockchaininfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(from=min(timestamp), to=max(timestamp)), .(chain, blocks, headers)],
+    walletinfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(timestamp, balance, unconfirmed_balance, txcount)],
+    transactions = function(x) x[, ts := as.POSIXct(time, origin="1970-01-01")][, .(.N, total_amount = sum(amount)), .(account, address, year(ts), month(ts), mday(ts))],
+    addressesbyaccount = function(x) x[, .(from=as.POSIXct(min(timestamp), origin="1970-01-01"), to=as.POSIXct(max(timestamp), origin="1970-01-01")), .(account, addresses)]
+)
+
+stats = function(tbls){
+    stopifnot(names(process)==names(data))
+    mapply(function(process, data) process(data), 
+           process[names(process) %in% tbls], 
+           data[names(data) %in% tbls], 
+           SIMPLIFY = FALSE)
+}
+print(stats(tbls))
