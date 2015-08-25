@@ -60,7 +60,7 @@ for(i in 1:4){ # i = 1L
     # wait before each iteration
     if(i > 1L) Sys.sleep(time = 1L)
     # generate blocks
-    if(blockcount < 300L) blocks = generate(101L)
+    #if(blockcount < 300L) blocks = generate(101L)
     # create acounts
     #new_num = i * 2L
     #getnewaddress(acc)
