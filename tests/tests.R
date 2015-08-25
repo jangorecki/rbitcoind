@@ -77,7 +77,7 @@ for(i in 1:4){ # i = 1L
     # write to db
     dbWrite("blockchaininfo", blockchaininfo)
     dbWrite("walletinfo", walletinfo)
-    lapply(accounts, function(account) dbWrite("transactions", value = listtransactions(account)[, c(meta_cols(i), .SD)]))
+    lapply(accounts, function(account) dbWrite("transactions", value = setDT(listtransactions(account))[, c(meta_cols(i), .SD)]))
     lapply(accounts, function(account) dbWrite("addressesbyaccount", value = data.table(addresses = getaddressesbyaccount(account))[, c(meta_cols(i), list(account = account), .SD)]))
 }
 invisible(dbDisconnect(conn))
