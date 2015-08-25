@@ -111,25 +111,25 @@ sapply(names(blockchain_data), function(blockchain_tbl) write.csv(blockchain_dat
 sapply(names(wallet_data), function(wallet_tbl) write.csv(wallet_data[[wallet_tbl]], file = paste0("rbitcoind_wallet_data_",wallet_tbl,".csv"), row.names = FALSE))
 sapply(names(accounts_data), function(accounts_tbl) write.csv(accounts_data[[accounts_tbl]], file = paste0("rbitcoind_accounts_data_",accounts_tbl,".csv"), row.names = FALSE))
 
-# stats
-
-tbls = c(blockchain_tbls, wallet_tbls, accounts_tbls)
-conn = dbConnect(SQLite(), db_file)
-ldata = lapply(selfName(tbls), dbRead)
-invisible(dbDisconnect(conn))
-
-lprocess = list(
-    blockchaininfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(from=min(timestamp), to=max(timestamp)), .(chain, blocks, headers)],
-    walletinfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(timestamp, balance, unconfirmed_balance, txcount)],
-    transactions = function(x) x[, ts := as.POSIXct(time, origin="1970-01-01")][, .(.N, total_amount = sum(amount)), .(account, address, year(ts), month(ts), mday(ts))],
-    addressesbyaccount = function(x) x[, .(from=as.POSIXct(min(timestamp), origin="1970-01-01"), to=as.POSIXct(max(timestamp), origin="1970-01-01")), .(account, addresses)]
-)
-
-stats = function(tbls, ldata, lprocess){
-    stopifnot(names(lprocess)==names(ldata))
-    mapply(function(process, data) process(data), 
-           lprocess[names(lprocess) %in% tbls], 
-           ldata[names(ldata) %in% tbls], 
-           SIMPLIFY = FALSE)
-}
-print(stats(tbls, ldata, lprocess))
+# # stats
+# 
+# tbls = c(blockchain_tbls, wallet_tbls, accounts_tbls)
+# conn = dbConnect(SQLite(), db_file)
+# ldata = lapply(selfName(tbls), dbRead)
+# invisible(dbDisconnect(conn))
+# 
+# lprocess = list(
+#     blockchaininfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(from=min(timestamp), to=max(timestamp)), .(chain, blocks, headers)],
+#     walletinfo = function(x) x[, timestamp := as.POSIXct(timestamp, origin="1970-01-01")][, .(timestamp, balance, unconfirmed_balance, txcount)],
+#     transactions = function(x) x[, ts := as.POSIXct(time, origin="1970-01-01")][, .(.N, total_amount = sum(amount)), .(account, address, year(ts), month(ts), mday(ts))],
+#     addressesbyaccount = function(x) x[, .(from=as.POSIXct(min(timestamp), origin="1970-01-01"), to=as.POSIXct(max(timestamp), origin="1970-01-01")), .(account, addresses)]
+# )
+# 
+# stats = function(tbls, ldata, lprocess){
+#     stopifnot(names(lprocess)==names(ldata))
+#     mapply(function(process, data) process(data), 
+#            lprocess[names(lprocess) %in% tbls], 
+#            ldata[names(ldata) %in% tbls], 
+#            SIMPLIFY = FALSE)
+# }
+# print(stats(tbls, ldata, lprocess))
