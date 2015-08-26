@@ -97,6 +97,7 @@ for(i in 1:4){ # i = 1L
     })
 }
 invisible(dbDisconnect(conn))
+chain = version.bitcoind() >= 110000L
 stop.bitcoind()
 
 # read blockchain and wallet data
@@ -104,7 +105,7 @@ stop.bitcoind()
 conn = dbConnect(SQLite(), db_file)
 blockchain_tbls = c("blockchaininfo")
 wallet_tbls = c("walletinfo")
-accounts_tbls = c("transactions","addressesbyaccount")
+accounts_tbls = c(if(chain) "transactions","addressesbyaccount")
 blockchain_data = lapply(selfName(blockchain_tbls), dbRead)
 wallet_data = lapply(selfName(wallet_tbls), dbRead)
 accounts_data = lapply(selfName(accounts_tbls), function(name) dbRead(name))
