@@ -29,3 +29,7 @@ kill.bitcoind <- function(){
     pid = pid.bitcoind()
     if(length(pid)) sapply(pid, function(pid) system(paste("kill",pid))) else pid
 }
+
+#' @title version.bitcoind
+#' @details Version integer as from \code{getinfo()[["version"]]}.
+version.bitcoind <- function() getinfo()[["version"]]
