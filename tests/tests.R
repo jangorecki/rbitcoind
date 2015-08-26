@@ -64,8 +64,10 @@ for(i in 1:4){ # i = 1L
     # wait before each iteration
     if(i > 1L) Sys.sleep(time = 1L)
     # generate blocks
-    #if(i == 1L) invisible(generate(100L))
-    #invisible(generate(i * 2L))
+    if(version.bitcoind() >= 110000L){
+        if(i == 1L) invisible(generate(100L))
+        invisible(generate(i * 2L))
+    }
     # create accounts
     new_accounts = sapply(1:(i*2L), function(i) getRandString(6L))
     invisible(sapply(new_accounts, getnewaddress))
@@ -73,8 +75,12 @@ for(i in 1:4){ # i = 1L
     accounts = names(listaccounts())
     # addresses = lapply(accounts, as.null)
     # TO DO
+    
     # make transactions
-    # TO DO
+    if(version.bitcoind() >= 110000L){
+        # TO DO
+    }
+    
     # collect info
     blockchaininfo = setDT(getblockchaininfo())[, c(meta_cols(i), .SD)]
     walletinfo = setDT(getwalletinfo())[, c(meta_cols(i), .SD)]
