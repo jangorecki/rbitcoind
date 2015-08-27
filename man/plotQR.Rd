@@ -3,15 +3,15 @@
 \alias{plotQR}
 \title{Plot QR code for payment uri.}
 \usage{
-plotQR(to_encode)
+plotQR(dataString)
 }
 \arguments{
-\item{to_encode}{any accepted by qrencoder pkg.}
+\item{dataString}{any accepted by qrcode pkg.}
 }
 \description{
 Plot QR code for payment uri.
 }
 \details{
-Requires qrencoder package.
+Requires qrcode package.
 }
 

@@ -6,20 +6,18 @@ before_install:
   - sudo apt-get update -qq
   
 apt_packages:
-  - libqrencode-dev
   - bitcoind
 
 r_packages:
   - jsonlite
   - httr
-  - raster
+  - qrcode
   - RSQLite
   - shiny
   - DT
 
 r_github_packages:
   - Rdatatable/data.table
-  - hrbrmstr/qrencoder@2ee1e8799d3257a711b8bfe8b6f43552956d76cb
 
 after_script:
   - cat $(find . -maxdepth 1 -name "*.Rcheck" -type d)/tests/tests.Rout

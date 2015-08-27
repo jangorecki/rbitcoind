@@ -7,16 +7,13 @@ makepaymenturi <- function(address, amount) paste0("bitcoin:",address,"?amount="
 
 #' @name plotQR
 #' @title Plot QR code for payment uri.
-#' @param to_encode any accepted by qrencoder pkg.
-#' @details Requires qrencoder package.
-plotQR <- function(to_encode){
-    mar <- par(mar=c(0,0,0,0))
-    on.exit(par(mar))
-    if(requireNamespace("qrencoder", quietly = TRUE)){
-        suppressPackageStartupMessages(require("raster")) # cannot image without attaching raster package
-        image(qrencoder::qrencode_raster(to_encode), asp=1, col=c("white", "black"), axes=FALSE, xlab="", ylab="")
+#' @param dataString any accepted by qrcode pkg.
+#' @details Requires qrcode package.
+plotQR <- function(dataString){
+    if(requireNamespace("qrcode", quietly = TRUE)){
+        qrcode::qrcode_gen(dataString)
     } else {
         plot(c(0, 1), c(0, 1), ann=FALSE, bty="n", type="n", xaxt="n", yaxt="n")
-        text(x = 0.5, y = 0.5, "To display QR Code install hrbrmstr/qrencoder package", col = "black")
+        text(x = 0.5, y = 0.5, "To display QR Code install qrcode package", col = "black")
     }
 }
