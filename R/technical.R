@@ -1,35 +1,22 @@
-#' @title run.bitcoind
-#' @details Simply calls \code{system("bitcoind -daemon")}. Works only when bitcoin daemon available on localhost.
-run.bitcoind <- function(){
-    rpchost = getOption("rpchost")
-    if(!is.null(rpchost) && !rpchost %in% c("127.0.0.1","localhost")) stop(paste0("start.bitcoind function can only start locally hosted bitcoin node, adjust your 'rpchost' option, current value: ", toString(rpchost)))
-    bitcoind_datadir = path.expand(paste("~",getOption("bitcoind.datadir", ".bitcoin"), sep="/"))
-    bitcoind_pid = pid.bitcoind()
-    if(length(bitcoind_pid)) stop(paste0("bitcoind is already running in ", paste(names(bitcoind_pid),collapse=", "), " mode. The bitcoind.pid and regtest/bitcoind.pid should not exists. For custom pid file use 'bitcoind.pid' option."))
-    run_res = capture.output(system("bitcoind -daemon"))
-    run_res
-}
+#' @name makepaymenturi
+#' @title Generate payment uri.
+#' @param address character. Target address.
+#' @param amount numeric. Amount to be hardcoded in payment uri.
+#' @return Character, payment uri link \code{bitcoin:ADDRESS&amount=0.1}.
+makepaymenturi <- function(address, amount) paste0("bitcoin:",address,"?amount=",amount)
 
-#' @title pid.bitcoind
-#' @details Checks for bitcoind.pid file (or value from option \code{"bitcoind.pid"}) in bitcoin datadir and subdir regtest.
-pid.bitcoind <- function(){
-    bitcoind_datadir = getOption("bitcoind.datadir", ".bitcoin")
-    bitcoind_pid = getOption("bitcoind.pid", "bitcoind.pid")
-    path_pid = c(
-        mainnet = paste(path.expand("~"), bitcoind_datadir, bitcoind_pid, sep="/"),
-        regtest = paste(path.expand("~"), bitcoind_datadir, "regtest", bitcoind_pid, sep="/")
-    )
-    which_pid = sapply(path_pid, file.exists)
-    if(length(path_pid[which_pid])) sapply(path_pid[which_pid], readLines) else path_pid[which_pid]
+#' @name plotQR
+#' @title Plot QR code for payment uri.
+#' @param to_encode any accepted by qrencoder pkg.
+#' @details Requires qrencoder package.
+plotQR <- function(to_encode){
+    mar <- par(mar=c(0,0,0,0))
+    on.exit(par(mar))
+    if(requireNamespace("qrencoder", quietly = TRUE)){
+        suppressPackageStartupMessages(require("raster")) # cannot image without attaching raster package
+        image(qrencoder::qrencode_raster(to_encode), asp=1, col=c("white", "black"), axes=FALSE, xlab="", ylab="")
+    } else {
+        plot(c(0, 1), c(0, 1), ann=FALSE, bty="n", type="n", xaxt="n", yaxt="n")
+        text(x = 0.5, y = 0.5, "To display QR Code install hrbrmstr/qrencoder package", col = "black")
+    }
 }
-
-#' @title kill.bitcoind
-#' @details Kills bitcoind processes detected by \link{pid.bitcoind}.
-kill.bitcoind <- function(){
-    pid = pid.bitcoind()
-    if(length(pid)) sapply(pid, function(pid) system(paste("kill",pid))) else pid
-}
-
-#' @title version.bitcoind
-#' @details Version integer as from \code{getinfo()[["version"]]}.
-version.bitcoind <- function() getinfo()[["version"]]

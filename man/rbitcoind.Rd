@@ -3,23 +3,34 @@
 \name{rbitcoind}
 \alias{rbitcoind}
 \alias{rbitcoind-package}
-\title{R API to bitcoin daemon}
+\title{R interface to bitcoin daemon}
 \description{
-You need to setup/connect to bitcoin node. Unit tests are run on \code{regtest} network which uses private blockchain and doesn't need to be synchronized.
+You need to have to bitcoin node installed, blockchain is not necessary. Unit tests runs on \emph{regtest} network which uses private blockchain and doesn't need to be synchronized.
 }
 \examples{
 \dontrun{
-options(rpchost = "127.0.0.1",
-        rpcuser = "bitcoinduser",
-        rpcpassword = "userpassbitcoind",
-        rpcport = "18332") # regtest
-getinfo()
+# low level calls to json-rpc
+bitcoind.rpc(host = "127.0.0.1",
+             user = "rpcuser",
+             password = "rpcpassword",
+             port = "18332", # regtest
+             method = "getinfo")
+
+# bitcoin daemon object
+btcd <- bitcoind$new(host = "127.0.0.1",
+                     rpcuser = "rpcuser",
+                     rpcpassword = "rpcpassword",
+                     rpcport = "18332")
+btcd$getinfo()
 }
 }
 \author{
 Jan Gorecki
 }
+\references{
+\url{https://bitcoin.org/en/glossary/regression-test-mode}
+}
 \seealso{
-\link{bitcoind.rpc}
+\link{bitcoind}, \link{bitcoind.rpc}
 }
 
