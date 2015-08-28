@@ -33,6 +33,7 @@ cat(head(readLines(bitcoind_conf, warn = FALSE),-1),"rpcpassword=***", sep="\n")
 btcd = bitcoind$new(rpcuser = "rpcuser",
                     rpcpassword = "rpcpassword",
                     regtest = TRUE)
+btcd$run()
 
 # valid testing environment
 

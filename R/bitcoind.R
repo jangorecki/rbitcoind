@@ -56,6 +56,15 @@ bitcoind <- R6Class(
             self$connect = if(missing(connect)) NULL else connect
             self$addnode = if(missing(addnode)) NULL else addnode
             self$pid = if(missing(pid)) "bitcoind.pid" else pid
+            if(was.running <- self$is.running()){
+                if(!identical(self$net, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
+                                                                         switch(self$get_network(),
+                                                                                "main" = "do not use `testnet` or `regtest` TRUE",
+                                                                                "test" = "`testnet=TRUE`",
+                                                                                "regtest" = "`regtest=TRUE`"),
+                                                                         "."),
+                                                                  call. = FALSE)
+            }
             invisible(self)
         },
         is.localhost = function() !length(self$host) || self$host %in% c("127.0.0.1","localhost"),
