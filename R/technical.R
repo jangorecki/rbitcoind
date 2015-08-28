@@ -17,3 +17,11 @@ plotQR <- function(dataString){
         text(x = 0.5, y = 0.5, "To display QR Code install qrcode package", col = "black")
     }
 }
+
+#' @name defaultports
+#' @title Returns matrix of defaults port used by bitcoin daemon modes.
+defaultports <- function(){
+    matrix(c(8333L, 18333L, 18444L, 8332L, 18332L, 18332L), 3L, 2L, 
+           dimnames = list(chain = c("main","test","regtest"), 
+                           interface = c("connect","rpc")))
+}

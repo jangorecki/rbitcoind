@@ -7,6 +7,7 @@
 
 library(rbitcoind)
 library(data.table)
+options("use.data.table" = TRUE)
 library(RSQLite)
 
 # deploy bitcoin.conf file from rbitcoind/conf/bitcoin.conf
@@ -29,13 +30,9 @@ cat(head(readLines(bitcoind_conf, warn = FALSE),-1),"rpcpassword=***", sep="\n")
 
 # run daemon
 
-btcd = bitcoind$new(host = "127.0.0.1",
-                    rpcuser = "rpcuser",
+btcd = bitcoind$new(rpcuser = "rpcuser",
                     rpcpassword = "rpcpassword",
-                    rpcport = "18332")
-btcd$run()
-Sys.sleep(5L)
-options("use.data.table" = TRUE)
+                    regtest = TRUE)
 
 # valid testing environment
 

@@ -26,7 +26,6 @@ bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),
     rpcurl <- paste0("http://",user,":",password,"@",host,":",port)
     req <- httr::POST(rpcurl, body = jsonlite::toJSON(list(jsonrpc = "1.0", id = id, method = method, params = params), auto_unbox=TRUE))
     if(httr::http_status(req)$category != "success"){
-        message(httr::content(req, "text"))
         message(jsonlite::fromJSON(httr::content(req, "text"))$error$message)
         httr::stop_for_status(req)
     }
