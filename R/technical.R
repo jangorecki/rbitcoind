@@ -25,3 +25,5 @@ defaultports <- function(){
            dimnames = list(chain = c("main","test","regtest"), 
                            interface = c("connect","rpc")))
 }
+
+run_localhost_msg <- function(method, cmd) paste0("`",method,"` method works only on localhost daemon, run on remote daemon manually using:\n",cmd)

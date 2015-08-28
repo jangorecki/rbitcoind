@@ -38,92 +38,105 @@ bitcoind <- R6Class(
         datadir = character(),
         connect = character(),
         addnode = character(),
+        listen = logical(),
         testnet = logical(),
         regtest = logical(),
-        net = character(),
+        network = character(),
         pid = character(), # file name
-        initialize = function(host, port, rpcuser, rpcpassword, rpcport, datadir, connect, addnode, testnet, regtest, pid){
+        initialize = function(host="127.0.0.1", port, rpcuser, rpcpassword, rpcport, datadir="~/.bitcoin", listen, connect=NULL, addnode=NULL, testnet=FALSE, regtest=FALSE, pid="bitcoind.pid"){
+            stopifnot(is.character(rpcuser), is.character(rpcpassword))
             private$rpcpassword = rpcpassword; rm(rpcpassword)
             self$rpcuser = rpcuser
-            self$host = if(missing(host)) "127.0.0.1" else host
-            self$testnet = if(missing(testnet)) NULL else as.logical(testnet)
-            self$regtest = if(missing(regtest)) NULL else as.logical(regtest)
+            self$host = host
+            self$testnet = testnet
+            self$regtest = regtest
             net = c("test"[self$testnet], "regtest"[self$regtest])
-            self$net = if(length(net)==0L) "main" else if(length(net)>1L) stop("Cannot use both testnet and regtest modes for single daemon instance.") else net
-            self$port = if(missing(port)) defaultports()[self$net,"connect"] else port
-            self$rpcport = if(missing(rpcport)) defaultports()[self$net,"rpc"] else rpcport
-            self$datadir = if(missing(datadir)) "~/.bitcoin" else datadir
-            self$connect = if(missing(connect)) NULL else connect
-            self$addnode = if(missing(addnode)) NULL else addnode
-            self$pid = if(missing(pid)) "bitcoind.pid" else pid
+            self$network = if(length(net)==0L) "main" else if(length(net)>1L) stop("Cannot use both testnet and regtest modes for single daemon instance at the same time.") else net
+            self$port = if(missing(port)) defaultports()[self$network,"connect"] else port
+            self$rpcport = if(missing(rpcport)) defaultports()[self$network,"rpc"] else rpcport
+            self$connect = connect
+            self$addnode = addnode
+            self$datadir = datadir
+            self$pid = pid
+            self$listen = if(missing(listen)) as.integer(!length(self$connect)) else listen
             if(was.running <- self$is.running()){
-                if(!identical(self$net, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
-                                                                         switch(self$get_network(),
-                                                                                "main" = "do not use `testnet` or `regtest` TRUE",
-                                                                                "test" = "`testnet=TRUE`",
-                                                                                "regtest" = "`regtest=TRUE`"),
-                                                                         "."),
-                                                                  call. = FALSE)
+                if(!identical(self$network, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
+                                                                             switch(self$get_network(),
+                                                                                    "main" = "do not use `testnet` or `regtest` TRUE",
+                                                                                    "test" = "`testnet=TRUE`",
+                                                                                    "regtest" = "`regtest=TRUE`"),
+                                                                             "."),
+                                                                      call. = FALSE)
             }
             invisible(self)
         },
-        is.localhost = function() !length(self$host) || self$host %in% c("127.0.0.1","localhost"),
+        is.localhost = function() self$host %in% c("127.0.0.1","localhost"),
         is.running =  function() all(c("result","error","id") %in% names(tryCatch(bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getinfo"), error = function(e) NULL))),
         get_network = function() self$getblockchaininfo()$chain,
-        get_subdir = function() switch(self$net, "main"=NULL, "test"="testnet3", "regtest"="regtest"),
-        get_pid = function() if(file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE),
+        get_subdir = function() switch(self$network, "main"=NULL, "test"=getOption("testnet.subdir","testnet3"), "regtest"="regtest"),
+        status = function(getinfo = FALSE){
+            df = data.frame(host = self$host, rpcport = self$rpcport, network = self$network, datadir = self$datadir, pid = self$get_pid())
+            if(getinfo){
+                info = if(self$is.running()) self$getinfo() else info = list(blocks = NA_integer_, balance = NA_real_, connections = NA_integer_)
+                df = cbind(df, data.frame(height = info$blocks, balance = info$balance, connections = info$connections))
+            }
+            use.data.table(df)
+        },
         print = function(getinfo = FALSE){
             cat("<bitcoind>\n")
-            cat("  network: ", self$net, "\n", sep="")
+            cat("  instance: ", self$host, ":", self$rpcport, "\n", sep="")
+            cat("  network: ", self$network, "\n", sep="")
             cat("  datadir: ", self$datadir,"\n", sep="")
-            Sys.sleep(0.001)
             cat("  pid: ", self$get_pid(), "\n", sep="")
             if(getinfo){
                 info = self$getinfo()
-                cat("  block height: ", info$blocks, "\n", sep="")
-                cat("  wallet balance: ", info$balance, "\n", sep="")
-                cat("  accounts count: ", length(self$listaccounts()), "\n", sep="")
-                cat("  connections count: ", info$connections, "\n", sep="")
+                cat("  height: ", info$blocks, "\n", sep="")
+                cat("  balance: ", info$balance, "\n", sep="")
+                cat("  connections: ", info$connections, "\n", sep="")
             }
         },
-        # system calls
+        # localhost only
+        get_pid = function(){
+            if(self$is.localhost()) if(file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE) else NA_character_
+        },
+        # localhost only system calls
         grep_pid = function(){
             cmd = "pgrep -f bitcoind.*"
+            if(!self$is.localhost()) stop(run_localhost_msg("grep_pid",cmd), call. = FALSE)
             message(cmd)
             system(cmd, intern = TRUE)
         },
         run = function(wait = 3){
             if(!(was.running <- self$is.running())){
-                dir = path.expand(self$datadir)
-                if(!dir.exists(dir)) dir.create(dir, recursive = TRUE)
+                if(self$is.localhost()){
+                    dir = path.expand(self$datadir)
+                    if(!dir.exists(dir)) dir.create(dir, recursive = TRUE)
+                    message(private$run_cmd(mask=TRUE))
+                    system(private$run_cmd(mask=FALSE))
+                    Sys.sleep(wait)
+                }
                 else {
-                    if(self$is.localhost()){
-                        message(private$run_cmd(mask=TRUE))
-                        system(private$run_cmd(mask=FALSE))
-                        Sys.sleep(wait)
-                    }
-                    else {
-                        cat("# Run method supports only localhost daemon, run remote daemon manually using:\n",sep="")
-                        cat(private$run_cmd(mask=TRUE),"\n",sep="")
-                    }
+                    if(!self$is.localhost()) stop(run_localhost_msg("run",private$run_cmd(mask=TRUE), call. = FALSE))
                 }
             }
-            if(!identical(self$net, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
-                                                                     switch(self$get_network(),
-                                                                            "main" = "do not use TRUE for `testnet` or `regtest`",
-                                                                            "test" = "`testnet=TRUE`",
-                                                                            "regtest" = "`regtest=TRUE`"),
-                                                                     "."),
-                                                              call. = FALSE)
+            if(!identical(self$network, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
+                                                                         switch(self$get_network(),
+                                                                                "main" = "do not use TRUE for `testnet` or `regtest`",
+                                                                                "test" = "`testnet=TRUE`",
+                                                                                "regtest" = "`regtest=TRUE`"),
+                                                                         "."),
+                                                                  call. = FALSE)
             invisible(self)
         },
         term = function(){
-            cmd = "killall -s SIGTERM --regex bitcoin.*"
+            cmd = "killall -s SIGTERM --regex bitcoind.*"
+            if(!self$is.localhost()) stop(run_localhost_msg("term",cmd), call. = FALSE)
             message(cmd)
             system(cmd)
         },
         kill = function(){
-            cmd = "killall -s SIGKILL --regex bitcoin.*" 
+            cmd = "killall -s SIGKILL --regex bitcoind.*"
+            if(!self$is.localhost()) stop(run_localhost_msg("kill",cmd), call. = FALSE)
             message(cmd)
             system(cmd)
         },
@@ -164,7 +177,20 @@ bitcoind <- R6Class(
     ),
     private = list(
         run_cmd = function(mask=TRUE){
-            paste0("bitcoind -server -listen -port=",self$port," -rpcuser=",self$rpcuser," -rpcpassword=", if(isTRUE(mask)) "***" else private$rpcpassword," -rpcport=",self$rpcport," -datadir=", if(isTRUE(mask)) self$datadir else path.expand(self$datadir), if(length(self$connect)) paste0(" -connect=",self$connect), if(length(self$addnode)) paste0(" -addnode=",self$addnode), if(isTRUE(self$regtest)) " -regtest"," -pid=",self$pid," -daemon")
+            no_value_args = c("server", "daemon", "listen"[as.logical(self$listen)], "regtest"[as.logical(self$regtest)], "testnet"[as.logical(self$testnet)])
+            value_args = c("port" = self$port,
+                           "rpcuser" = self$rpcuser,
+                           "rpcpassword" = if(mask) "***" else private$rpcpassword, 
+                           "rpcport" = self$rpcport,
+                           "datadir" = if(mask || !self$is.localhost()) self$datadir else path.expand(self$datadir),
+                           "pid" = self$pid,
+                           "connect" = if(length(self$connect)) self$connect,
+                           "addnode" = if(length(self$addnode)) self$addnode)
+            paste(
+                "bitcoind",
+                paste0("-",no_value_args,collapse=" "),
+                paste0("-",names(value_args),"=",value_args,collapse=" ")
+            )
         },
         rpcpassword = character()
     )

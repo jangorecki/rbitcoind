@@ -1,2 +1,7 @@
-exportPattern("^[^\\.]")
+export(bitcoind)
+export(bitcoind.rpc)
+export(use.data.table)
+export(makepaymenturi)
+export(plotQR)
+export(defaultports)
 import(R6)
