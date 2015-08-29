@@ -30,8 +30,8 @@ cat(head(readLines(bitcoind_conf, warn = FALSE),-1),"rpcpassword=***", sep="\n")
 
 # run daemon
 
-btcd = bitcoind$new(rpcuser = "rpcuser",
-                    rpcpassword = "rpcpassword",
+btcd = bitcoind$new(rpcuser = "username",
+                    rpcpassword = "password",
                     regtest = TRUE)
 btcd$run()
 

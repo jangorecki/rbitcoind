@@ -12,15 +12,14 @@ You need to have to bitcoin node installed, blockchain is not necessary. Unit te
 \examples{
 \dontrun{
 # low level calls to json-rpc
-bitcoind.rpc(host = "127.0.0.1",
-             user = "rpcuser",
-             password = "rpcpassword",
-             port = "18332", # regtest
+bitcoind.rpc(user = "username",
+             password = "password",
+             port = "18332",
              method = "getinfo")
 
 # bitcoin daemon object
-btcd <- bitcoind$new(rpcuser = "rpcuser",
-                     rpcpassword = "rpcpassword",
+btcd <- bitcoind$new(rpcuser = "username",
+                     rpcpassword = "password",
                      regtest = TRUE)
 btcd$getinfo()
 }

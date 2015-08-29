@@ -31,10 +31,9 @@ Bitcoin daemon curl call wrapper.
 }
 \examples{
 \dontrun{
-bitcoind.rpc(host = "127.0.0.1",
-             user = "rpcuser",
-             password = "rpcpassword",
-             port = "18332", # regtest
+bitcoind.rpc(user = "username",
+             password = "password",
+             port = "18332",
              method = "getinfo")
 }
 }

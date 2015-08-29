@@ -9,10 +9,9 @@
 #' @param params list.
 #' @return jsonlite decoded response from json-rpc bitcoind. If \code{option("use.data.table"=TRUE)} then it will recursively turn data.frames to data.tables.
 #' @examples \dontrun{
-#' bitcoind.rpc(host = "127.0.0.1",
-#'              user = "rpcuser", 
-#'              password = "rpcpassword", 
-#'              port = "18332", # regtest
+#' bitcoind.rpc(user = "username", 
+#'              password = "password", 
+#'              port = "18332",
 #'              method = "getinfo")
 #' }
 bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),

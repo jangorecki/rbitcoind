@@ -8,15 +8,14 @@
 #' @aliases btcd rbtcd
 #' @examples \dontrun{
 #' # low level calls to json-rpc
-#' bitcoind.rpc(host = "127.0.0.1",
-#'              user = "rpcuser",
-#'              password = "rpcpassword",
-#'              port = "18332", # regtest
+#' bitcoind.rpc(user = "username",
+#'              password = "password",
+#'              port = "18332",
 #'              method = "getinfo")
 #' 
 #' # bitcoin daemon object
-#' btcd <- bitcoind$new(rpcuser = "rpcuser", 
-#'                      rpcpassword = "rpcpassword", 
+#' btcd <- bitcoind$new(rpcuser = "username", 
+#'                      rpcpassword = "password", 
 #'                      regtest = TRUE)
 #' btcd$getinfo()
 #' }
@@ -119,13 +118,14 @@ bitcoind <- R6Class(
                     if(!self$is.localhost()) stop(run_localhost_msg("run",private$run_cmd(mask=TRUE), call. = FALSE))
                 }
             }
-            if(!identical(self$network, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
-                                                                         switch(self$get_network(),
-                                                                                "main" = "do not use TRUE for `testnet` or `regtest`",
-                                                                                "test" = "`testnet=TRUE`",
-                                                                                "regtest" = "`regtest=TRUE`"),
-                                                                         "."),
-                                                                  call. = FALSE)
+            if(self$is.running() && !identical(self$network, self$get_network()))
+                stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
+                            switch(self$get_network(),
+                                   "main" = "do not use TRUE for `testnet` or `regtest`",
+                                   "test" = "`testnet=TRUE`",
+                                   "regtest" = "`regtest=TRUE`"),
+                            "."),
+                     call. = FALSE)
             invisible(self)
         },
         term = function(){
@@ -156,9 +156,11 @@ bitcoind <- R6Class(
         getchaintips = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getchaintips")$result,
         getconnectioncount = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getconnectioncount")$result,
         getinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getinfo")$result,
+        getmempoolinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getmempoolinfo")$result,
         getnetworkinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getnetworkinfo")$result,
-        getpeerinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getpeerinfo")$result,
         getnewaddress = function(account = "") bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getnewaddress", params = list(account))$result,
+        getpeerinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getpeerinfo")$result,
+        getrawmempool = function(verbose = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getrawmempool", params = list(verbose))$result,
         getrawtransaction = function(txid, verbose = 0) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getrawtransaction", params = list(txid, verbose))$result,
         getreceivedbyaccount = function(account, minconf = 1L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getreceivedbyaccount", params = list(account, minconf))$result,
         getreceivedbyaddress = function(bitcoinaddress, minconf = 1L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getreceivedbyaddress", params = list(bitcoinaddress, minconf))$result,
