@@ -174,6 +174,7 @@ bitcoind <- R6Class(
         listsinceblock = function(blockhash, target.confirmations = 1L, includeWatchonly = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listsinceblock", params = list(blockhash, target.confirmations, includeWatchonly))$result,
         listtransactions = function(account, count = 10L, from = 0L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listtransactions", params = list(account, count, from))$result,
         listunspent = function(miconf = 1L, maxconf = 9999999L, addresses) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listunspent", params = list(miconf, maxconf, addresses))$result,
+        sendtoaddress = function(bitcoinaddress, amount, comment = "", comment.to = "", subtractfeefromamount = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "sendtoaddress", params = list(bitcoinaddress, amount, comment, comment.to, subtractfeefromamount))$result,
         stop = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "stop")$result,
         validateaddress = function(bitcoinaddress) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "validateaddress", params = list(bitcoinaddress))$result
     ),
