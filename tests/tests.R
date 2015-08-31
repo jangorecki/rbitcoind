@@ -1,45 +1,28 @@
 ## rbitcoind CI tests
 # confgurate new private blockchain using `regtest` mode
-# mine some BTC
+# mine some BTC (bitcoind >= 0.11)
 # dump some statitics blockchain, wallet, accounts
 # iterate few times
-# validate results
+# print results
 
 library(rbitcoind)
 library(data.table)
 options("use.data.table" = TRUE)
 library(RSQLite)
 
-# deploy bitcoin.conf file from rbitcoind/conf/bitcoin.conf
-
-bitcoind_datadir = path.expand("~/.bitcoin")
-bitcoind_conf_pkg = system.file("conf","bitcoin.conf", package = "rbitcoind")
-bitcoind_conf = paste(bitcoind_datadir, "bitcoin.conf", sep="/")
-if(!dir.exists(bitcoind_datadir)){
-    dir.create(bitcoind_datadir)
-    file.copy(bitcoind_conf_pkg, bitcoind_conf)
-} else {
-    if(!file.exists(bitcoind_conf)){
-        file.copy(bitcoind_conf_pkg, bitcoind_conf)
-    } else {
-        conf_match = identical(readLines(bitcoind_conf_pkg,warn=FALSE), readLines(bitcoind_conf,warn=FALSE))
-        if(!conf_match) stop(paste0(bitcoind_conf, " should not exists or should match to ",bitcoind_conf_pkg,"."))
-    }
-}
-cat(head(readLines(bitcoind_conf, warn = FALSE),-1),"rpcpassword=***", sep="\n")
-
 # run daemon
 
 btcd = bitcoind$new(rpcuser = "username",
                     rpcpassword = "password",
-                    regtest = TRUE)
+                    regtest = TRUE,
+                    datadir = tempdir())
 btcd$run()
 
 # valid testing environment
 
 if(!length(info <- btcd$getinfo())) stop("Testing connection to bitcoin daemon fails.")
 setDT(info)[]
-# if((blockcount <- btcd$getblockcount()) > 0L) stop(paste0("Connected to non fresh blockchain, already has ", blockcount, " blocks. For CI use fresh environment."))
+if((blockcount <- btcd$getblockcount()) > 0L) stop(paste0("Connected to non fresh blockchain, already has ", blockcount, " blocks. For CI use fresh environment."))
 
 # iterations on blockchain and wallet growing
 

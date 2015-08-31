@@ -58,8 +58,8 @@ bitcoind <- R6Class(
             self$datadir = datadir
             self$pid = pid
             self$listen = if(missing(listen)) as.integer(!length(self$connect)) else listen
-            if(was.running <- self$is.running()){
-                if(!identical(self$network, self$get_network())) stop(paste0("Target daemon is ","already "[was.running],"running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
+            if(self$is.running()){
+                if(!identical(self$network, self$get_network())) stop(paste0("Target daemon is already running on ",self$get_network()," network. Adjust daemon's bitcoin.conf or args to bitcoind$new: ", 
                                                                              switch(self$get_network(),
                                                                                     "main" = "do not use `testnet` or `regtest` TRUE",
                                                                                     "test" = "`testnet=TRUE`",
@@ -141,6 +141,7 @@ bitcoind <- R6Class(
             system(cmd)
         },
         # json-rpc
+        rpc = function(method, params) if(!missing(params)) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = method, params = params)$result else bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = method)$result,
         decoderawtransaction = function(hex) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "decoderawtransaction", params = list(hex))$result,
         decodescript = function(hex) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "decodescript", params = list(hex))$result,
         generate = function(numblocks) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "generate", params = list(numblocks))$result,
