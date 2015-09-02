@@ -95,14 +95,13 @@ bitcoind <- R6Class(
             }
         },
         # localhost only
-        get_pid = function(){
-            if(self$is.localhost()) if(file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE) else NA_character_
-        },
+        get_pid = function() if(self$is.localhost() && file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE) else NA_character_,
         # localhost only system calls
-        grep_pid = function(){
-            cmd = "pgrep -f bitcoind.*"
-            if(!self$is.localhost()) stop(run_localhost_msg("grep_pid",cmd), call. = FALSE)
+        pgrep = function(){
+            cmd = "pgrep -f bitcoind"
+            if(!self$is.localhost()) stop(run_localhost_msg("pgrep",cmd), call. = FALSE)
             message(cmd)
+            # fix after http://stackoverflow.com/questions/32352867/extra-process-id-from-r-systempgrep-call
             system(cmd, intern = TRUE)
         },
         run = function(wait = 3){
@@ -129,13 +128,13 @@ bitcoind <- R6Class(
             invisible(self)
         },
         term = function(){
-            cmd = "killall -s SIGTERM --regex bitcoind.*"
+            cmd = "pkill --signal SIGTERM bitcoind"
             if(!self$is.localhost()) stop(run_localhost_msg("term",cmd), call. = FALSE)
             message(cmd)
             system(cmd)
         },
         kill = function(){
-            cmd = "killall -s SIGKILL --regex bitcoind.*"
+            cmd = "pkill --signal SIGKILL bitcoind"
             if(!self$is.localhost()) stop(run_localhost_msg("kill",cmd), call. = FALSE)
             message(cmd)
             system(cmd)
