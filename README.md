@@ -5,7 +5,7 @@ Using `sapply` or `lapply` you can easily manage a farm of bitcoin nodes and moc
 Be aware each node requires own copy of blockchain unless you are using `regtest` mode which runs private empty blokchain.  
 If you want to run multiple nodes of `testnet` or `mainnet` you should start single instance, fully synchronize it and copy blockchain data to rest of your nodes.  
 Names of methods match to names listed in [official developer reference](https://bitcoin.org/en/developer-reference#rpcs). Not all methods are implemented, for those which aren't you can use `x$rpc(method, params)` method which allows any other json-rpc method.  
-There are also many helper methods.  
+There are also many helper methods, some of them uses system calls and may not work on non-linux OS.  
 
 # Usage
 
@@ -41,13 +41,10 @@ The CI process run tests which includes setting up new private blockchain using 
 Stable:
 
 ```r
-r = getOption("repos")
-r["jangorecki"] = "http://jangorecki.github.io/drat"
-options(repos = r)
-install.packages("rbitcoind")
+install.packages("rbitcoind", repos="https://jangorecki.github.io/drat")
 ```
 
-Latest devel:
+Devel:
 
 ```r
 library(devtools) # install.packages("devtools")
