@@ -2,7 +2,7 @@ Package: rbitcoind
 Type: Package
 Title: R interface to bitcoin daemon
 Version: 0.2
-Date: 2015-08-31
+Date: 2015-09-02
 Author: Jan Gorecki
 Maintainer: Jan Gorecki <J.Gorecki@wit.edu.pl>
 Description: Wrappers around bitcoin daemon json-rpc.
