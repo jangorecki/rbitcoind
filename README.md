@@ -4,7 +4,7 @@ Creates R6 class which allows to interact with official bitcoin daemon using jso
 Using `sapply` or `lapply` you can easily manage a farm of bitcoin nodes and mockup a complete environment.  
 Be aware each node requires own copy of blockchain unless you are using `regtest` mode which runs private empty blokchain.  
 If you want to run multiple nodes of `testnet` or `mainnet` you should start single instance, fully synchronize it and copy blockchain data to rest of your nodes.  
-Names of methods match to names listed in [official developer reference](https://bitcoin.org/en/developer-reference#rpcs). Not all methods are implemented, for those which aren't you can use `x$rpc(method, params)` method which allows any method.  
+Names of methods match to names listed in [official developer reference](https://bitcoin.org/en/developer-reference#rpcs). Not all methods are implemented, for those which aren't you can use `x$rpc(method, params)` method which allows any other json-rpc method.  
 There are also many helper methods.  
 
 # Usage
@@ -12,6 +12,7 @@ There are also many helper methods.
 Example usage on localhost.  
 
 ```r
+library(rbitcoind)
 btcd = bitcoind$new(rpcuser = "username", 
                     rpcpassword = "password", 
                     regtest = TRUE)
@@ -41,7 +42,7 @@ Stable:
 
 ```r
 r = getOption("repos")
-r["jangorecki"] = paste0("http://jangorecki.github.io/drat")
+r["jangorecki"] = "http://jangorecki.github.io/drat"
 options(repos = r)
 install.packages("rbitcoind")
 ```
