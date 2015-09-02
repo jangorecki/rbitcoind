@@ -42,7 +42,7 @@ meta_cols = function(i, ts=Sys.time()) list(ci=ci_time, iteration=i, timestamp=t
 for(i in 1:4){ # i = 1L
     
     # wait a second before each iteration except first
-    if(i > 1L) Sys.sleep(time = 1L)
+    if(i > 1L) Sys.sleep(1)
     
     # populate blockchain
     if((ver <- btcd$getinfo()$version) >= 110000L) btcd$generate(if(btcd$getblockcount() >= 100L) 1L else 100L)
@@ -57,7 +57,7 @@ for(i in 1:4){ # i = 1L
     new_address_accounts = sample(accounts, as.integer(length(accounts)/2L))
     sapply(new_address_accounts, function(account) btcd$getnewaddress(account))
     
-    # make transactions
+    # make transactions # TO DO
     if((ver <- btcd$getinfo()$version) >= 110000L) invisible()
     else cat("Update your bitcoin package, currently installed ", ver,", required 110000.\n",sep="")
     

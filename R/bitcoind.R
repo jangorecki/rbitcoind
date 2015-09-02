@@ -5,8 +5,10 @@
 #' @description You need to have to bitcoin node installed, blockchain is not necessary. Unit tests runs on \emph{regtest} network which uses private blockchain and doesn't need to be synchronized.
 #' @seealso \link{bitcoind}, \link{bitcoind.rpc}
 #' @references \url{https://bitcoin.org/en/glossary/regression-test-mode}
-#' @aliases btcd rbtcd
+#' @aliases rbtcd
 #' @examples \dontrun{
+#' # examples assumes your daemon is already running on regtest
+#' 
 #' # low level calls to json-rpc
 #' bitcoind.rpc(user = "username",
 #'              password = "password",
@@ -14,10 +16,11 @@
 #'              method = "getinfo")
 #' 
 #' # bitcoin daemon object
-#' btcd <- bitcoind$new(rpcuser = "username", 
-#'                      rpcpassword = "password", 
-#'                      regtest = TRUE)
+#' btcd = bitcoind$new(rpcuser = "username", 
+#'                     rpcpassword = "password", 
+#'                     regtest = TRUE)
 #' btcd$getinfo()
+#' print(btcd)
 #' }
 NULL
 
@@ -26,6 +29,7 @@ NULL
 #' @format An R6 class object.
 #' @name bitcoind
 #' @details Initiate object to manage all RPC methods.
+#' @aliases btcd
 #' @seealso \link{bitcoind.rpc}
 bitcoind <- R6Class(
     classname = "bitcoind",
@@ -74,7 +78,7 @@ bitcoind <- R6Class(
         get_network = function() self$getblockchaininfo()$chain,
         get_subdir = function() switch(self$network, "main"=NULL, "test"=getOption("testnet.subdir","testnet3"), "regtest"="regtest"),
         status = function(getinfo = FALSE){
-            df = data.frame(host = self$host, rpcport = self$rpcport, network = self$network, datadir = self$datadir, pid = self$get_pid())
+            df = data.frame(host = self$host, rpcport = self$rpcport, network = self$network, datadir = self$datadir, pid = self$read_pid())
             if(getinfo){
                 info = if(self$is.running()) self$getinfo() else info = list(blocks = NA_integer_, balance = NA_real_, connections = NA_integer_)
                 df = cbind(df, data.frame(height = info$blocks, balance = info$balance, connections = info$connections))
@@ -86,7 +90,7 @@ bitcoind <- R6Class(
             cat("  instance: ", self$host, ":", self$rpcport, "\n", sep="")
             cat("  network: ", self$network, "\n", sep="")
             cat("  datadir: ", self$datadir,"\n", sep="")
-            cat("  pid: ", self$get_pid(), "\n", sep="")
+            cat("  pid: ", self$read_pid(), "\n", sep="")
             if(getinfo){
                 info = self$getinfo()
                 cat("  height: ", info$blocks, "\n", sep="")
@@ -95,7 +99,7 @@ bitcoind <- R6Class(
             }
         },
         # localhost only
-        get_pid = function() if(self$is.localhost() && file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE) else NA_character_,
+        read_pid = function() if(self$is.localhost() && file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE) else NA_character_,
         # localhost only system calls
         pgrep = function(){
             cmd = "pgrep bitcoind"

@@ -2,6 +2,7 @@
 \docType{class}
 \name{bitcoind}
 \alias{bitcoind}
+\alias{btcd}
 \title{bitcoind class}
 \format{An R6 class object.}
 \usage{
