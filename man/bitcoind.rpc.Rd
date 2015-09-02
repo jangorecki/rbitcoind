@@ -3,13 +3,13 @@
 \alias{bitcoind.rpc}
 \title{Bitcoin daemon curl call wrapper.}
 \usage{
-bitcoind.rpc(host = getOption("rpchost", "127.0.0.1"),
+bitcoind.rpc(connect = getOption("rpchost", "127.0.0.1"),
   user = getOption("rpcuser"), password = getOption("rpcpassword"),
   port = getOption("rpcport", "8332"), id = NA_integer_, method,
   params = list())
 }
 \arguments{
-\item{host}{character.}
+\item{connect}{character.}
 
 \item{user}{character.}
 

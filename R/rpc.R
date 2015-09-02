@@ -1,6 +1,6 @@
 #' @name bitcoind.rpc
 #' @title Bitcoin daemon curl call wrapper.
-#' @param host character.
+#' @param connect character.
 #' @param user character.
 #' @param password character.
 #' @param port character.
@@ -14,7 +14,7 @@
 #'              port = "18332",
 #'              method = "getinfo")
 #' }
-bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),
+bitcoind.rpc <- function(connect = getOption("rpchost","127.0.0.1"),
                          user = getOption("rpcuser"),
                          password = getOption("rpcpassword"),
                          port = getOption("rpcport","8332"),
@@ -22,13 +22,13 @@ bitcoind.rpc <- function(host = getOption("rpchost","127.0.0.1"),
     if(!is.character(user)) stop("Provided `user` to `bitcoind.rpc` is invalid.")
     if(!is.character(password)) stop("Provided `password` to `bitcoind.rpc` is invalid.")
     if(!is.character(method)) stop("Provided `method` to `bitcoind.rpc` is invalid.")
-    rpcurl <- paste0("http://",user,":",password,"@",host,":",port)
-    req <- httr::POST(rpcurl, body = jsonlite::toJSON(list(jsonrpc = "1.0", id = id, method = method, params = params), auto_unbox=TRUE))
-    if(httr::http_status(req)$category != "success"){
-        message(jsonlite::fromJSON(httr::content(req, "text"))$error$message)
-        httr::stop_for_status(req)
+    rpcurl <- paste0("http://",user,":",password,"@",connect,":",port)
+    req <- POST(rpcurl, body = toJSON(list(jsonrpc = "1.0", id = id, method = method, params = params), auto_unbox=TRUE))
+    if(http_status(req)$category != "success"){
+        message(fromJSON(content(req, "text"))$error$message)
+        stop_for_status(req)
     }
-    use.data.table(jsonlite::fromJSON(httr::content(req, "text")))
+    use.data.table(fromJSON(content(req, "text")))
 }
 
 #' @name use.data.table

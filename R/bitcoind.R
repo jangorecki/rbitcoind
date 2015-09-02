@@ -34,7 +34,7 @@ NULL
 bitcoind <- R6Class(
     classname = "bitcoind",
     public = list(
-        host = character(),
+        rpcconnect = character(),
         port = character(),
         rpcuser = character(),
         rpcport = character(),
@@ -46,11 +46,11 @@ bitcoind <- R6Class(
         regtest = logical(),
         network = character(),
         pid = character(), # file name
-        initialize = function(host="127.0.0.1", port, rpcuser, rpcpassword, rpcport, datadir="~/.bitcoin", listen, connect=NULL, addnode=NULL, testnet=FALSE, regtest=FALSE, pid="bitcoind.pid"){
+        initialize = function(rpcconnect="127.0.0.1", port, rpcuser, rpcpassword, rpcport, datadir="~/.bitcoin", listen, connect=NULL, addnode=NULL, testnet=FALSE, regtest=FALSE, pid="bitcoind.pid"){
             stopifnot(is.character(rpcuser), is.character(rpcpassword))
             private$rpcpassword = rpcpassword; rm(rpcpassword)
             self$rpcuser = rpcuser
-            self$host = host
+            self$rpcconnect = rpcconnect
             self$testnet = testnet
             self$regtest = regtest
             net = c("test"[self$testnet], "regtest"[self$regtest])
@@ -73,12 +73,12 @@ bitcoind <- R6Class(
             }
             invisible(self)
         },
-        is.localhost = function() self$host %in% c("127.0.0.1","localhost"),
-        is.running =  function() all(c("result","error","id") %in% names(tryCatch(bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getinfo"), error = function(e) NULL))),
+        is.localhost = function() self$rpcconnect %in% c("127.0.0.1","localhost"),
+        is.running =  function() all(c("result","error","id") %in% names(tryCatch(bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getinfo"), error = function(e) NULL))),
         get_network = function() self$getblockchaininfo()$chain,
         get_subdir = function() switch(self$network, "main"=NULL, "test"=getOption("testnet.subdir","testnet3"), "regtest"="regtest"),
         status = function(getinfo = FALSE){
-            df = data.frame(host = self$host, rpcport = self$rpcport, network = self$network, datadir = self$datadir, pid = self$read_pid())
+            df = data.frame(rpcconnect = self$rpcconnect, rpcport = self$rpcport, network = self$network, datadir = self$datadir, pid = self$read_pid())
             if(getinfo){
                 info = if(self$is.running()) self$getinfo() else info = list(blocks = NA_integer_, balance = NA_real_, connections = NA_integer_)
                 df = cbind(df, data.frame(height = info$blocks, balance = info$balance, connections = info$connections))
@@ -87,7 +87,7 @@ bitcoind <- R6Class(
         },
         print = function(getinfo = FALSE){
             cat("<bitcoind>\n")
-            cat("  instance: ", self$host, ":", self$rpcport, "\n", sep="")
+            cat("  instance: ", self$rpcconnect, ":", self$rpcport, "\n", sep="")
             cat("  network: ", self$network, "\n", sep="")
             cat("  datadir: ", self$datadir,"\n", sep="")
             cat("  pid: ", self$read_pid(), "\n", sep="")
@@ -143,43 +143,43 @@ bitcoind <- R6Class(
             system(cmd)
         },
         # json-rpc
-        rpc = function(method, params) if(!missing(params)) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = method, params = params)$result else bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = method)$result,
-        decoderawtransaction = function(hex) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "decoderawtransaction", params = list(hex))$result,
-        decodescript = function(hex) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "decodescript", params = list(hex))$result,
-        generate = function(numblocks) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "generate", params = list(numblocks))$result,
-        getaccountaddress = function(account) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getaccountaddress", params = list(account))$result,
-        getaccount = function(bitcoinaddress) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getaccount", params = list(bitcoinaddress))$result,
-        getaddressesbyaccount = function(account) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getaddressesbyaccount", params = list(account))$result,
-        getbalance = function(account) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getbalance", params = list(account))$result,
-        getbestblockhash = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getbestblockhash")$result,
-        getblock = function(hash, verbose = TRUE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblock", params = list(hash, verbose))$result,
-        getblockchaininfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblockchaininfo")$result,
-        getblockcount = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblockcount")$result,
-        getblockhash = function(index) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblockhash", params = list(index))$result,
-        getchaintips = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getchaintips")$result,
-        getconnectioncount = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getconnectioncount")$result,
-        getinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getinfo")$result,
-        getmempoolinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getmempoolinfo")$result,
-        getnetworkinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getnetworkinfo")$result,
-        getnewaddress = function(account = "") bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getnewaddress", params = list(account))$result,
-        getpeerinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getpeerinfo")$result,
-        getrawmempool = function(verbose = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getrawmempool", params = list(verbose))$result,
-        getrawtransaction = function(txid, verbose = 0) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getrawtransaction", params = list(txid, verbose))$result,
-        getreceivedbyaccount = function(account, minconf = 1L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getreceivedbyaccount", params = list(account, minconf))$result,
-        getreceivedbyaddress = function(bitcoinaddress, minconf = 1L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getreceivedbyaddress", params = list(bitcoinaddress, minconf))$result,
-        gettransaction = function(txid, includeWatchonly = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "gettransaction", params = list(txid, includeWatchonly))$result,
-        getunconfirmedbalance = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getunconfirmedbalance")$result,
-        getwalletinfo = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getwalletinfo")$result,
-        help = function(command) if(missing(command)) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "help")$result else bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "help", params = list(command))$result,
-        listaccounts = function(minconf = 1L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listaccounts", params = list(minconf))$result,
-        listaddressgroupings = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listaddressgroupings")$result,
-        listreceivedbyaccount = function(minconf = 1L, includeempty = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listreceivedbyaccount", params = list(minconf, includeempty))$result,
-        listsinceblock = function(blockhash, target.confirmations = 1L, includeWatchonly = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listsinceblock", params = list(blockhash, target.confirmations, includeWatchonly))$result,
-        listtransactions = function(account, count = 10L, from = 0L) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listtransactions", params = list(account, count, from))$result,
-        listunspent = function(miconf = 1L, maxconf = 9999999L, addresses) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listunspent", params = list(miconf, maxconf, addresses))$result,
-        sendtoaddress = function(bitcoinaddress, amount, comment = "", comment.to = "", subtractfeefromamount = FALSE) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "sendtoaddress", params = list(bitcoinaddress, amount, comment, comment.to, subtractfeefromamount))$result,
-        stop = function() bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "stop")$result,
-        validateaddress = function(bitcoinaddress) bitcoind.rpc(host=self$host, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "validateaddress", params = list(bitcoinaddress))$result
+        rpc = function(method, params) if(!missing(params)) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = method, params = params)$result else bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = method)$result,
+        decoderawtransaction = function(hex) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "decoderawtransaction", params = list(hex))$result,
+        decodescript = function(hex) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "decodescript", params = list(hex))$result,
+        generate = function(numblocks) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "generate", params = list(numblocks))$result,
+        getaccountaddress = function(account) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getaccountaddress", params = list(account))$result,
+        getaccount = function(bitcoinaddress) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getaccount", params = list(bitcoinaddress))$result,
+        getaddressesbyaccount = function(account) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getaddressesbyaccount", params = list(account))$result,
+        getbalance = function(account) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getbalance", params = list(account))$result,
+        getbestblockhash = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getbestblockhash")$result,
+        getblock = function(hash, verbose = TRUE) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblock", params = list(hash, verbose))$result,
+        getblockchaininfo = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblockchaininfo")$result,
+        getblockcount = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblockcount")$result,
+        getblockhash = function(index) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getblockhash", params = list(index))$result,
+        getchaintips = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getchaintips")$result,
+        getconnectioncount = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getconnectioncount")$result,
+        getinfo = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getinfo")$result,
+        getmempoolinfo = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getmempoolinfo")$result,
+        getnetworkinfo = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getnetworkinfo")$result,
+        getnewaddress = function(account = "") bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getnewaddress", params = list(account))$result,
+        getpeerinfo = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getpeerinfo")$result,
+        getrawmempool = function(verbose = FALSE) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getrawmempool", params = list(verbose))$result,
+        getrawtransaction = function(txid, verbose = 0) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getrawtransaction", params = list(txid, verbose))$result,
+        getreceivedbyaccount = function(account, minconf = 1L) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getreceivedbyaccount", params = list(account, minconf))$result,
+        getreceivedbyaddress = function(bitcoinaddress, minconf = 1L) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getreceivedbyaddress", params = list(bitcoinaddress, minconf))$result,
+        gettransaction = function(txid, includeWatchonly = FALSE) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "gettransaction", params = list(txid, includeWatchonly))$result,
+        getunconfirmedbalance = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getunconfirmedbalance")$result,
+        getwalletinfo = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "getwalletinfo")$result,
+        help = function(command) if(missing(command)) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "help")$result else bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "help", params = list(command))$result,
+        listaccounts = function(minconf = 1L) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listaccounts", params = list(minconf))$result,
+        listaddressgroupings = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listaddressgroupings")$result,
+        listreceivedbyaccount = function(minconf = 1L, includeempty = FALSE) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listreceivedbyaccount", params = list(minconf, includeempty))$result,
+        listsinceblock = function(blockhash, target.confirmations = 1L, includeWatchonly = FALSE) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listsinceblock", params = list(blockhash, target.confirmations, includeWatchonly))$result,
+        listtransactions = function(account, count = 10L, from = 0L) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listtransactions", params = list(account, count, from))$result,
+        listunspent = function(miconf = 1L, maxconf = 9999999L, addresses) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "listunspent", params = list(miconf, maxconf, addresses))$result,
+        sendtoaddress = function(bitcoinaddress, amount, comment = "", comment.to = "", subtractfeefromamount = FALSE) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "sendtoaddress", params = list(bitcoinaddress, amount, comment, comment.to, subtractfeefromamount))$result,
+        stop = function() bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "stop")$result,
+        validateaddress = function(bitcoinaddress) bitcoind.rpc(connect=self$rpcconnect, user=self$rpcuser, password=private$rpcpassword, port=self$rpcport, method = "validateaddress", params = list(bitcoinaddress))$result
     ),
     private = list(
         run_cmd = function(mask=TRUE){

@@ -34,7 +34,7 @@ keepAtomic = function(x) x[, .SD, .SDcols=sapply(x, is.atomic)]
 dbWrite = function(name, value) dbWriteTable(conn, name, value = keepAtomic(value), append = TRUE)
 dbRead = function(name) use.data.table(dbReadTable(conn, name))
 selfName = function(x) setNames(x, x)
-getRandString = function(len=12L) return(paste(sample(c(rep(0:9,each=5),LETTERS,letters),len,replace=TRUE),collapse='')) # https://ryouready.wordpress.com/2008/12/18/generate-random-string-name/#comment-38
+getRandString = function(len=12L) return(paste(sample(c(rep(0:9,each=5),LETTERS,letters),len,replace=TRUE),collapse=""))
 
 set.seed(123)
 ci_time = as.integer(Sys.time())
@@ -91,4 +91,6 @@ sapply(DT, nrow)
 # stop and exit
 
 btcd$stop()
+Sys.sleep(3)
+
 q("no")
