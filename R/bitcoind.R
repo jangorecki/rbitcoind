@@ -98,10 +98,9 @@ bitcoind <- R6Class(
         get_pid = function() if(self$is.localhost() && file.exists(pid_path <- paste(c(self$datadir, self$get_subdir(), self$pid), collapse="/"))) readLines(pid_path,warn=FALSE) else NA_character_,
         # localhost only system calls
         pgrep = function(){
-            cmd = "pgrep -f bitcoind"
+            cmd = "pgrep bitcoind"
             if(!self$is.localhost()) stop(run_localhost_msg("pgrep",cmd), call. = FALSE)
             message(cmd)
-            # fix after http://stackoverflow.com/questions/32352867/extra-process-id-from-r-systempgrep-call
             system(cmd, intern = TRUE)
         },
         run = function(wait = 3){
